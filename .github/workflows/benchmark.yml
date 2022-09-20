@@ -1,0 +1,80 @@
+name: Benchmark
+on:
+  push: {}
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build-with-docker:
+    name: Build with Docker
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - uses: docker/setup-buildx-action@v2
+      - uses: docker/setup-qemu-action@v2
+
+      - name: Build Server image
+        uses: docker/build-push-action@v2
+        with:
+          context: ./upstream
+          file: ./upstream/server.Dockerfile
+          platforms: linux/amd64,linux/arm64
+
+      - name: Build Server image
+        uses: docker/build-push-action@v2
+        with:
+          context: ./upstream
+          file: ./upstream/admin-tools.Dockerfile
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            SERVER_IMAGE=temporaliotest/server:latest
+
+      - name: Build Auto Setup
+        uses: docker/build-push-action@v2
+        with:
+          context: ./upstream
+          file: ./upstream/auto-setup.Dockerfile
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            SERVER_IMAGE=temporaliotest/server:latest
+            ADMIN_TOOLS_IMAGE=temporaliotest/admin-tools:latest
+
+  build-with-depot:
+    name: Build with Depot
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - uses: depot/setup-action@v1
+
+      - name: Build Server image
+        uses: depot/build-push-action@v1
+        with:
+          context: ./upstream
+          file: ./upstream/server.Dockerfile
+          platforms: linux/amd64,linux/arm64
+
+      - name: Build Server image
+        uses: depot/build-push-action@v1
+        with:
+          context: ./upstream
+          file: ./upstream/admin-tools.Dockerfile
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            SERVER_IMAGE=temporaliotest/server:latest
+
+      - name: Build Auto Setup
+        uses: depot/build-push-action@v1
+        with:
+          context: ./upstream
+          file: ./upstream/auto-setup.Dockerfile
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            SERVER_IMAGE=temporaliotest/server:latest
+            ADMIN_TOOLS_IMAGE=temporaliotest/admin-tools:latest
