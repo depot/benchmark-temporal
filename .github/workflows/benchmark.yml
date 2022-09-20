@@ -18,29 +18,37 @@ jobs:
       - uses: docker/setup-buildx-action@v2
       - uses: docker/setup-qemu-action@v2
 
-      - name: Build Server image
-        uses: docker/build-push-action@v2
-        with:
-          context: ./upstream
-          file: ./upstream/server.Dockerfile
-          platforms: linux/amd64,linux/arm64
+      - name: Determine upstream commit SHA
+        id: upstream
+        run: echo "::set-output name=sha::$(cd upstream && git rev-parse HEAD)"
 
       - name: Build Server image
         uses: docker/build-push-action@v2
         with:
-          context: ./upstream
-          file: ./upstream/admin-tools.Dockerfile
+          context: https://github.com/temporalio/docker-builds.git#${{ steps.upstream.outputs.sha }}
+          file: ./server.Dockerfile
           platforms: linux/amd64,linux/arm64
           build-args: |
+            BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
+
+      - name: Build Server image
+        uses: docker/build-push-action@v2
+        with:
+          context: https://github.com/temporalio/docker-builds.git#${{ steps.upstream.outputs.sha }}
+          file: ./admin-tools.Dockerfile
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
             SERVER_IMAGE=temporaliotest/server:latest
 
       - name: Build Auto Setup
         uses: docker/build-push-action@v2
         with:
-          context: ./upstream
-          file: ./upstream/auto-setup.Dockerfile
+          context: https://github.com/temporalio/docker-builds.git#${{ steps.upstream.outputs.sha }}
+          file: ./auto-setup.Dockerfile
           platforms: linux/amd64,linux/arm64
           build-args: |
+            BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
             SERVER_IMAGE=temporaliotest/server:latest
             ADMIN_TOOLS_IMAGE=temporaliotest/admin-tools:latest
 
@@ -53,28 +61,36 @@ jobs:
           submodules: recursive
       - uses: depot/setup-action@v1
 
-      - name: Build Server image
-        uses: depot/build-push-action@v1
-        with:
-          context: ./upstream
-          file: ./upstream/server.Dockerfile
-          platforms: linux/amd64,linux/arm64
+      - name: Determine upstream commit SHA
+        id: upstream
+        run: echo "::set-output name=sha::$(cd upstream && git rev-parse HEAD)"
 
       - name: Build Server image
         uses: depot/build-push-action@v1
         with:
-          context: ./upstream
-          file: ./upstream/admin-tools.Dockerfile
+          context: https://github.com/temporalio/docker-builds.git#${{ steps.upstream.outputs.sha }}
+          file: ./server.Dockerfile
           platforms: linux/amd64,linux/arm64
           build-args: |
+            BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
+
+      - name: Build Server image
+        uses: depot/build-push-action@v1
+        with:
+          context: https://github.com/temporalio/docker-builds.git#${{ steps.upstream.outputs.sha }}
+          file: ./admin-tools.Dockerfile
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
             SERVER_IMAGE=temporaliotest/server:latest
 
       - name: Build Auto Setup
         uses: depot/build-push-action@v1
         with:
-          context: ./upstream
-          file: ./upstream/auto-setup.Dockerfile
+          context: https://github.com/temporalio/docker-builds.git#${{ steps.upstream.outputs.sha }}
+          file: ./auto-setup.Dockerfile
           platforms: linux/amd64,linux/arm64
           build-args: |
+            BUILDKIT_CONTEXT_KEEP_GIT_DIR=1
             SERVER_IMAGE=temporaliotest/server:latest
             ADMIN_TOOLS_IMAGE=temporaliotest/admin-tools:latest
